@@ -9,6 +9,7 @@ describe('storage/in-memory', () => {
       expect(storage.opts).toBe(opts)
       expect(storage).toBeInstanceOf(InMemoryStorage)
     })
+
   })
 
   describe('options', () => {

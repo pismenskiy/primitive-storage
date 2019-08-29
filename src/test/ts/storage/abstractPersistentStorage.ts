@@ -1,17 +1,39 @@
 import AbstractPersistentStorage from '../../../main/ts/storage/abstractPersistentStorage'
 import InMemoryStorage from '../../../main/ts/storage/inMemoryStorage'
+import {IStorageOpts} from '../../../main/ts/interface'
 
 const stringify = AbstractPersistentStorage.stringify.bind(
   AbstractPersistentStorage,
 )
-const write = AbstractPersistentStorage.write.bind(AbstractPersistentStorage)
-const read = AbstractPersistentStorage.read.bind(AbstractPersistentStorage)
+
+class TestAbstractPersistentStorage extends AbstractPersistentStorage {}
+
+const testAbstractPersistentStorage = new TestAbstractPersistentStorage({})
+
+const write = testAbstractPersistentStorage.io.write
+const read = testAbstractPersistentStorage.io.read
 const {parse} = AbstractPersistentStorage
 
 describe('storage/abstractPersistent', () => {
   describe('constructor', () => {
     class Storage extends AbstractPersistentStorage {
+
+      constructor(opts: IStorageOpts) {
+        super(opts)
+      }
+
+      io = {
+        write: (path: string, data: string) => {
+          throw new Error('test write')
+        },
+
+        read: (path: string) => {
+          throw new Error('test read')
+        },
+      }
+
       syncFrom() {}
+
     }
 
     it('returns proper instance', () => {
@@ -34,13 +56,20 @@ describe('storage/abstractPersistent', () => {
   describe('proto', () => {
     describe('sync', () => {
       let persisted = 'qux'
-      class Storage extends AbstractPersistentStorage {
-        static read(path: string) {
-          return 'read' + path + persisted
-        }
 
-        static write(path: string, data: string) {
-          persisted = 'write' + path + data
+      class Storage extends AbstractPersistentStorage {
+
+        constructor(opts: IStorageOpts) {
+          super(opts)
+          this.io = {
+            read: (path: string) => {
+              return 'read' + path + persisted
+            },
+
+            write: (path: string, data: string) => {
+              persisted = 'write' + path + data
+            },
+          }
         }
 
         static stringify(data: string) {
@@ -50,10 +79,12 @@ describe('storage/abstractPersistent', () => {
         static parse(data: string) {
           return 'parsed' + data
         }
+
       }
+
       const path = 'foo'
       const storage = new Storage({path})
-      const a = storage
+
       it('`syncFrom` composes `read` and `parse`', () => {
         storage.syncFrom()
         expect(storage.cache.data).toBe('parsedreadfooqux')
@@ -70,12 +101,22 @@ describe('storage/abstractPersistent', () => {
 
     describe('IStorage methods', () => {
       class Storage extends AbstractPersistentStorage {
-        static write() {}
 
-        static read() {
-          return '{"foo": {"value": "bar"}}'
+        constructor(opts: any) {
+          super(opts)
+          this.io = {
+            write: () => {
+              console.log('123')
+            },
+
+            read: () => {
+              return '{"foo": {"value": "bar"}}'
+            },
+          }
         }
+
       }
+
       const storage = new Storage({path: 'qux'})
       const syncTo = jest.spyOn(storage, 'syncTo')
       const syncFrom = jest.spyOn(storage, 'syncFrom')
@@ -139,18 +180,6 @@ describe('storage/abstractPersistent', () => {
     describe('parse', () => {
       it('parses JSON string', () => {
         expect(parse('{"foo":"bar"}')).toEqual({foo: 'bar'})
-      })
-    })
-
-    describe('read', () => {
-      it('is not implemented', () => {
-        expect(read).toThrow('read not implemented')
-      })
-    })
-
-    describe('write', () => {
-      it('is not implemented', () => {
-        expect(write).toThrow('write not implemented')
       })
     })
   })

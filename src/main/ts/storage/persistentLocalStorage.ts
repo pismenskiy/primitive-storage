@@ -7,19 +7,21 @@ export const DEFAULT_PATH = 'default.json'
 export default class PersistentLocalStorage extends AbstractPersistentStorage
   implements IStorage {
 
+  io = {
+    write: (path: string, data: string): void => {
+      localStorage.setItem(path, data)
+    },
+
+    read: (path: string): IAny => {
+      return localStorage.getItem(path)
+    },
+  }
   constructor(opts: IStorageOpts = {}) {
-    const path = PREFIX + (opts.path || DEFAULT_PATH)
-    const _opts = {...opts, path}
+    // const path = PREFIX + (opts.path || DEFAULT_PATH)
+    // const _opts = {...opts, path}
 
-    super(_opts)
-  }
-
-  static write(path: string, data: string): void {
-    localStorage.setItem(path, data)
-  }
-
-  static read(path: string): IAny {
-    return localStorage.getItem(path)
+    // super(_opts)
+    super(opts)
   }
 
 }

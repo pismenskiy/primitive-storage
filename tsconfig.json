@@ -12,7 +12,9 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": false,
     "declaration": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["src/main/**/*.ts"],
   "exclude": ["node_modules"]
